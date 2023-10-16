@@ -41,6 +41,21 @@
 				messageInput.value = '';
 			}
 		}
+		
+		document.getElementById('message').addEventLisstener('keydown', function(e){
+			if(e.key === 'Enter' && !event.shiftKey) {
+				event.preventDefault();
+				sendMessage();
+			}
+		});
+		socket.on('chat message', (data) => {
+			const chatWindow = document.getElementById("chat-window");
+			const messageDiv = document.createElement('div');
+			messageDiv.className = data.id === userId ? 'my-message' : 'other-message';
+			
+			const idDiv = document.createElement('div');
+			
+		})
 	</script>
 </body>
 </html>
