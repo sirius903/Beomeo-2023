@@ -1,61 +1,108 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
- 	<meta charset="UTF-8">
- 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
- 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
- 	<title>Document</title>
-	<link href="style.css" rel="stylesheet">
+
+<!-- saved from url=(0038)https://chatting-rzeqr.run.goorm.site/ -->
+<html lang="ko"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	 <!--문자 인코딩을 UTF-8로 설정-->
+	<meta name="viewport" content="width=device-width, initial-scale=1"> <!--페이지가 처음 로드될 때 줌 레벨을 1로 설정. 원래크기-->
+    <title>고운말 채팅</title>
+	<link rel="stylesheet" href="./고운말 채팅_files/style.css">
 </head>
 <body>
-	<div id="chat-window"></div>
-	<div id="message-input" align="center">
-		<input type="text" id="message" placeholder="메시지를 입력하세요.">
-		<button onclick="sendMessage()">보내기</button>
+    <div id="chat-window"><div class="center-message">null님이 입장하셨습니다.</div></div>
+    <div id="message-input" align="center">
+        <input type="text" id="message" placeholder="메시지를 입력하세요.">
+        <button onclick="sendMessage()">보내기</button>
 		<button onclick="closeWindow()">창닫기</button>
-	</div>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-	<script>
-		function closeWindow(){
-			socket.disconnect();
-			if(/Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent)){
+    </div>
+    <script src="./고운말 채팅_files/socket.io.js.다운로드"></script>
+    <script>
+		function closeWindow() {
+			socket.disconnect(); // 연결 종료
+
+			if (/Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+				// 모바일 디바이스의 경우
 				window.history.back();
-			}else{
-				window.close();
+			} else {
+				// 데스크톱의 경우
+				window.close();  // 윈도우 창 닫기
 			}
-		}
+   		 }
 		
-		const socket = io.connect();
-		let userId = prompt('환영합니다. \n \n 아이디를 입력하세요.');
-		socket.emit('set user', userId);
-		document.getElementById('message').focus();
+        const socket = io.connect();  //클라이언트는 서버와의 소켓 연결을 설정
+        let userId = prompt('범어고 고운말 채탕칭입니다. \n \n 아이디를 입력하세요.');
+		socket.emit('set user', userId);  
+		document.getElementById('message').focus(); // 메시지창에 커서 포커싱
 		
-		function sendMessage(){
-			const messageInput = document.getElementById("message");
-			const message = messageInput.value;
-			if(message){
-				socket.emit('chat message', {
-					id:userId,
-					message: message
-				});
-				messageInput.value = '';
-			}
-		}
+        function sendMessage() {
+            const messageInput = document.getElementById('message');
+            const message = messageInput.value;
+            if (message) {
+                socket.emit('chat message', { id: userId, message: message });  // 이벤트를 서버로 전송
+                messageInput.value = '';
+            }
+        }
 		
-		document.getElementById('message').addEventLisstener('keydown', function(e){
-			if(e.key === 'Enter' && !event.shiftKey) {
-				event.preventDefault();
-				sendMessage();
+		
+		// 'Enter'키를 눌렀을 때, shift키가 눌리지 않았다면
+		document.getElementById('message').addEventListener('keydown', function(event) {
+			if (event.key === 'Enter' && !event.shiftKey) {
+				event.preventDefault(); // 기본 액션(새 줄 생성) 방지
+				sendMessage(); // 메시지 전송 함수 호출
 			}
 		});
-		socket.on('chat message', (data) => {
-			const chatWindow = document.getElementById("chat-window");
-			const messageDiv = document.createElement('div');
-			messageDiv.className = data.id === userId ? 'my-message' : 'other-message';
+        socket.on('chat message', (data) => {  //서버로부터 'chat message' 이벤트를 받을 때의 처리
+            const chatWindow = document.getElementById('chat-window');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = data.id === userId ? 'my-message' : 'other-message';
+
+            // Created separate div for ID
+            const idDiv = document.createElement('div');
+            idDiv.className = 'id';
+            idDiv.textContent = data.id;
+            messageDiv.appendChild(idDiv);
+
+            const messageBubble = document.createElement('div');
+            messageBubble.className = 'message';
+            messageBubble.textContent = data.message;
+            messageDiv.appendChild(messageBubble);
 			
-			const idDiv = document.createElement('div');
 			
-		})
-	</script>
-</body>
-</html>
+
+			if(data.id === userId && data.badWordsDetected)  {
+				alert(`${data.id}님. 고운말을 사용하세요. 나쁜 단어를 ${data.badWordsCount}번 사용했습니다.`);
+			}
+
+			if(data.id === userId && data.badWordsCount >= 5)  {
+				alert('나쁜 단어를 너무 많이 사용하여 채팅창이 닫칩니다.');
+				closeWindow(); 
+			}
+
+			
+            chatWindow.appendChild(messageDiv);   //채팅창에 새로운 메시지 표시
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+			console.log(chatWindow.scrollTop, chatWindow.scrollHeight)
+        });
+		
+
+
+	socket.on('user entered', (id) => {
+		const chatWindow = document.getElementById('chat-window');
+		const messageDiv = document.createElement('div');
+		messageDiv.className = 'center-message';  // 가운데 정렬을 위한 클래스
+		messageDiv.textContent = `${id}님이 입장하셨습니다.`;
+		chatWindow.appendChild(messageDiv);
+		chatWindow.scrollTop = chatWindow.scrollHeight;
+	});
+
+	socket.on('user left', (id) => {
+		const chatWindow = document.getElementById('chat-window');
+		const messageDiv = document.createElement('div');
+		messageDiv.className = 'center-message';  // 가운데 정렬을 위한 클래스
+		messageDiv.textContent = `${id}님이 퇴장하셨습니다.`;
+		chatWindow.appendChild(messageDiv);
+		chatWindow.scrollTop = chatWindow.scrollHeight;
+	});
+
+    </script>
+
+
+</body></html>
