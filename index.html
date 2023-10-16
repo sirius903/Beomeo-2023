@@ -16,7 +16,31 @@
 	</div>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 	<script>
+		function closeWindow(){
+			socket.disconnect();
+			if(/Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent)){
+				window.history.back();
+			}else{
+				window.close();
+			}
+		}
 		
+		const socket = io.connect();
+		let userId = prompt('환영합니다. \n \n 아이디를 입력하세요.');
+		socket.emit('set user', userId);
+		document.getElementById('message').focus();
+		
+		function sendMessage(){
+			const messageInput = document.getElementById("message");
+			const message = messageInput.value;
+			if(message){
+				socket.emit('chat message', {
+					id:userId,
+					message: message
+				});
+				messageInput.value = '';
+			}
+		}
 	</script>
 </body>
 </html>
